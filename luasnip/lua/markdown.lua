@@ -19,7 +19,24 @@ local fmta = require("luasnip.extras.fmt").fmta
 local types = require("luasnip.util.types")
 local conds = require("luasnip.extras.expand_conditions")
 
+local rec_ls
+rec_ls = function()
+	return sn(nil, {
+		c(1, {
+			-- important!! Having the sn(...) as the first choice will cause infinite recursion.
+			t({""}),
+			-- The same dynamicNode as in the snippet (also note: self reference).
+			sn(nil, {t({"", "\t\\item "}), i(1), d(2, rec_ls, {})}),
+		}),
+	});
+end
+
 local  markdown = {
+    s("ls", {
+        t({"\\begin{itemize}",
+        "\t\\item "}), i(1), d(2, rec_ls, {}),
+        t({"", "\\end{itemize}"}), i(0)
+    }),
     s({trig = "tb(%d+)*(%d+)", regTrig = true,dscr="生成表格"},{
         -- pos, function, argnodes, user_arg1
         d(1, function(args, snip, old_state, initial_text)
@@ -47,8 +64,6 @@ local  markdown = {
             return snip
         end, {}, "   ")
     }),
-    s("ls",{c(1,{t("ok"),t("")})})
-    ,
     s("cond", {
         t("will only expand in c-style comments"),
     }, {
